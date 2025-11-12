@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Custom SVG Navbar</title>
+  <style>
+    body {
+      margin: 0;
+      background: #121212;
+      color: white;
+      font-family: "Segoe UI", sans-serif;
+      overflow: hidden;
+    }
+
+    .titlebar {
+      -webkit-app-region: drag;
+      height: 36px;
+      background: #1e1e1e;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 8px;
+      user-select: none;
+    }
+
+    .titlebar .title {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    .window-controls {
+      display: flex;
+      align-items: center;
+      -webkit-app-region: no-drag;
+    }
+
+    .window-controls button {
+      width: 45px;
+      height: 36px;
+      border: none;
+      outline: none;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .window-controls button:hover {
+      background: #333;
+    }
+
+    .window-controls button.close:hover {
+      background: #e81123;
+    }
+
+    .window-controls svg {
+      width: 12px;
+      height: 12px;
+      fill: #ccc;
+    }
+  </style>
+</head>
+<body>
+  <div class="titlebar">
+    <div class="title">My Electron App</div>
+
+    <div class="window-controls">
+      <!-- Minimize -->
+      <button id="min-btn" title="Minimize">
+        <svg viewBox="0 0 12 12">
+          <rect x="2" y="6" width="8" height="1.5" />
+        </svg>
+      </button>
+
+      <!-- Maximize -->
+      <button id="max-btn" title="Maximize">
+        <svg viewBox="0 0 12 12">
+          <rect x="2" y="2" width="8" height="8" fill="none" stroke="#ccc" stroke-width="1.5" />
+        </svg>
+      </button>
+
+      <!-- Close -->
+      <button id="close-btn" class="close" title="Close">
+        <svg viewBox="0 0 12 12">
+          <line x1="2" y1="2" x2="10" y2="10" stroke="#ccc" stroke-width="1.5" />
+          <line x1="10" y1="2" x2="2" y2="10" stroke="#ccc" stroke-width="1.5" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div style="padding: 20px;">
+    <h1>Hello</h1>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
