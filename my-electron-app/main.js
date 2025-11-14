@@ -1,31 +1,46 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 
-let win;
+let mainWindow;
 
 function createWindow() {
-  win = new BrowserWindow({
-    width: 900,
-    height: 600,
-    frame: false,
-    backgroundColor: "#121212",
+  mainWindow = new BrowserWindow({
+    width: 1000,
+    height: 700,
+    minWidth: 600,
+    minHeight: 300,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      nodeIntegration: true,
-      contextIsolation: false
-    }
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js')
+    },
+    frame: false
   });
 
-  win.loadFile('index.html');
+  mainWindow.loadFile('index.html');
 }
 
-ipcMain.on('window-control', (_, action) => {
-  if (!win) return;
-  switch (action) {
-    case 'minimize': win.minimize(); break;
-    case 'maximize': win.isMaximized() ? win.unmaximize() : win.maximize(); break;
-    case 'close': win.close(); break;
+app.on('ready', createWindow);
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
   }
 });
 
-app.whenReady().then(createWindow);
+// Window control handlers
+ipcMain.handle('window-minimize', () => {
+  mainWindow.minimize();
+});
+
+ipcMain.handle('window-maximize', () => {
+  if (mainWindow.isMaximized()) {
+    mainWindow.unmaximize();
+  } else {
+    mainWindow.maximize();
+  }
+});
+
+ipcMain.handle('window-close', () => {
+  mainWindow.close();
+});
