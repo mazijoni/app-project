@@ -1,58 +1,27 @@
-# Electron Chat App
+# 📦 Chat App (Electron + WebSocket Server)
 
-## 📖 Om prosjektet
-Målet er å utvikle en **chat-applikasjon** bygget med **React** og **Electron**, der brukere kan sende meldinger i sanntid.  
-Appen skal kjøre som et skrivebordsprogram og kobles til en **server** som håndterer kommunikasjon og lagring av meldinger.  
-
-### 💡 Prototype / MVP
-En enkel prototype vil først fokusere på:
-- Grunnleggende chat mellom to brukere
-- Vise meldinger i et React-basert grensesnitt
-- Enkel server (for eksempel med Express.js eller Socket.io)
-- Lokal lagring av meldinger (for testformål)
+A lightweight, real-time chat application built with **Electron** for the client and a **Node.js WebSocket server** running on a **Raspberry Pi / Linux** machine.  
+The app features a custom window frame, contact list, chat UI, and real-time messaging via WebSockets.
 
 ---
 
-## 🧰 Språk, teknologier og utstyr
+## ✨ Features
 
-| Teknologi / verktøy | Brukes til |
-|---------------------|------------|
-| **React** | Lage brukergrensesnittet til chat-appen |
-| **Electron** | Pakke applikasjonen som et skrivebordsprogram |
-| **Node.js + Express** | Lage backend/server for håndtering av meldinger |
-| **Socket.io** | Sanntidskommunikasjon mellom klient og server |
-| **JavaScript / TypeScript** | Hovedspråk for både frontend og backend |
-| **VS Code** | Utviklingsmiljø |
-| **Git / GitHub** | Versjonskontroll og prosjektstyring |
+### **Client (Electron App)**
+- Custom titlebar (minimize / maximize / close)
+- Modern messaging UI
+- Contact system (add / remove)
+- Per-contact chat history (in-memory)
+- Real-time WebSocket messaging
+- Runs on Windows, macOS, and Linux
 
----
-
-## 🧠 Faglig kompetanse
-
-### Drift
-- Sette opp og konfigurere servermiljø (Node.js, evt. lokal database)
-- Forstå hvordan applikasjonen distribueres og kjøres på ulike systemer
-
-### Utvikling
-- Programmere både frontend og backend i JavaScript/TypeScript  
-- Integrere sanntidsfunksjoner (Socket.io)  
-- Strukturere et moderne prosjekt med React og Electron  
-
-### Brukerstøtte
-- Designe et brukervennlig grensesnitt  
-- Teste og dokumentere funksjoner  
-- Skrive brukerveiledning eller hjelpefil for installasjon og bruk  
+### **Server (Node.js WebSocket Server)**
+- Handles connections from all clients
+- Broadcasts messages to everyone
+- Very lightweight (`ws` package)
+- Perfect for Raspberry Pi hosting
 
 ---
 
-## 🧩 Videre planer
-- Legge til brukerpålogging  
-- Implementere meldingshistorikk med database  
-- Mulighet for gruppechatter  
-- Temaer / mørk modus  
+## 🗂 Project Structure
 
----
-
-## 📎 Lenker
-- **GitHub-repo:** *(lenke her når det er opprettet)*  
-- **Prototype:** *(evt. lenke til Figma eller skjermbilde senere)*  
