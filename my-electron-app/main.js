@@ -18,9 +18,11 @@ function createWindow() {
   });
 
   mainWindow.loadFile('index.html');
+  // Uncomment to open devtools for debugging
+  // mainWindow.webContents.openDevTools({ mode: 'detach' });
 }
 
-app.on('ready', createWindow);
+app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
@@ -30,10 +32,11 @@ app.on('window-all-closed', () => {
 
 // Window control handlers
 ipcMain.handle('window-minimize', () => {
-  mainWindow.minimize();
+  if (mainWindow) mainWindow.minimize();
 });
 
 ipcMain.handle('window-maximize', () => {
+  if (!mainWindow) return;
   if (mainWindow.isMaximized()) {
     mainWindow.unmaximize();
   } else {
@@ -42,5 +45,5 @@ ipcMain.handle('window-maximize', () => {
 });
 
 ipcMain.handle('window-close', () => {
-  mainWindow.close();
+  if (mainWindow) mainWindow.close();
 });

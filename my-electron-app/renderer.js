@@ -1,4 +1,4 @@
-// Store chats for each person
+// Basic in-memory chats store
 const chats = {
   'John Doe': [],
   'Jane Smith': []
@@ -19,6 +19,44 @@ const modalInput = document.getElementById('modal-input');
 const modalAddBtn = document.getElementById('modal-add-btn');
 const modalCancelBtn = document.getElementById('modal-cancel-btn');
 
+// -------- WebSocket connection --------
+// Replace with your server IP or hostname. For testing on same machine use ws://localhost:8080
+const SERVER_URL = 'ws://YOUR_SERVER_IP:8080';
+const chatServer = window.electronAPI.connectToServer(SERVER_URL);
+
+chatServer.onOpen(() => {
+  console.log('Connected to server:', SERVER_URL);
+
+  // Optionally announce presence or handshake
+  chatServer.send({ type: 'hello', payload: 'Hello from client' });
+});
+
+chatServer.onMessage((raw) => {
+  try {
+    const data = JSON.parse(raw);
+    // expected message structure: { type: 'message', chat: 'John Doe', sender: 'Alice', text: 'hi' }
+    if (data.type === 'message') {
+      const { chat, sender, text } = data;
+      if (!chats[chat]) chats[chat] = [];
+      chats[chat].push({ sender, text });
+
+      if (currentChat === chat) displayChat();
+    }
+    // handle other types if needed
+  } catch (e) {
+    console.warn('Received non-JSON or malformed message:', raw);
+  }
+});
+
+chatServer.onClose(() => {
+  console.log('Disconnected from server');
+});
+
+chatServer.onError((e) => {
+  console.error('WebSocket error', e);
+});
+// -------------------------------------
+
 // Load chat when clicking a contact
 contactsList.addEventListener('click', (e) => {
   const removeBtn = e.target.closest('.remove-btn');
@@ -38,28 +76,22 @@ contactsList.addEventListener('click', (e) => {
   // Add active class to clicked item
   contactItem.classList.add('active');
 
-  // Get contact name (trim to exclude button)
   const contactNameDiv = contactItem.querySelector('.contact-name');
   currentChat = contactNameDiv.textContent.trim();
 
-  // Load and display the chat
   displayChat();
 });
 
-// Remove contact function
+// Remove contact
 function removeContact(btn) {
   const contactItem = btn.closest('.contact-item');
   const contactNameDiv = contactItem.querySelector('.contact-name');
   const contactName = contactNameDiv.textContent.trim();
 
   if (confirm(`Are you sure you want to remove ${contactName}?`)) {
-    // Remove from chats object
     delete chats[contactName];
-
-    // Remove from DOM
     contactItem.remove();
 
-    // If it was the current chat, switch to first available
     if (currentChat === contactName) {
       const firstContact = document.querySelector('.contact-item');
       if (firstContact) {
@@ -77,12 +109,12 @@ function removeContact(btn) {
 // Display chat messages
 function displayChat() {
   const messages = chats[currentChat] || [];
-  contentArea.innerHTML = `<h2>${currentChat}</h2>`;
+  contentArea.innerHTML = `<h2>${currentChat || 'No contact selected'}</h2>`;
 
   const messagesContainer = document.createElement('div');
   messagesContainer.style.display = 'flex';
   messagesContainer.style.flexDirection = 'column';
-  messagesContainer.style.gap = '5px';
+  messagesContainer.style.gap = '8px';
 
   messages.forEach(msg => {
     const msgDiv = document.createElement('div');
@@ -95,9 +127,11 @@ function displayChat() {
       msgDiv.style.background = '#0078d4';
       msgDiv.style.marginLeft = 'auto';
       msgDiv.style.marginRight = '0';
+      msgDiv.style.color = '#fff';
     } else {
       msgDiv.style.background = '#333';
       msgDiv.style.marginLeft = '0';
+      msgDiv.style.color = '#ddd';
     }
 
     msgDiv.textContent = `${msg.sender}: ${msg.text}`;
@@ -113,15 +147,17 @@ function displayChat() {
 // Send message
 submitBtn.addEventListener('click', () => {
   const message = textInput.value.trim();
-  if (!message) return;
+  if (!message || !currentChat) return;
 
-  // Add message to current chat
-  if (!chats[currentChat]) {
-    chats[currentChat] = [];
-  }
+  // Local push
+  if (!chats[currentChat]) chats[currentChat] = [];
+  chats[currentChat].push({ sender: 'You', text: message });
 
-  chats[currentChat].push({
-    sender: 'You',
+  // Send to server as a structured message
+  chatServer.send({
+    type: 'message',
+    chat: currentChat,
+    sender: 'You', // later replace with username
     text: message
   });
 
@@ -136,37 +172,31 @@ textInput.addEventListener('keypress', (e) => {
   }
 });
 
-// Add new person
+// Add new person (modal)
 addPersonBtn.addEventListener('click', () => {
   addPersonModal.classList.add('active');
   modalInput.value = '';
   modalInput.focus();
 });
 
-// Cancel modal
 modalCancelBtn.addEventListener('click', () => {
   addPersonModal.classList.remove('active');
 });
 
-// Add person from modal
 modalAddBtn.addEventListener('click', () => {
   const name = modalInput.value.trim();
-  
   if (!name) {
     alert('Please enter a username');
     return;
   }
 
-  // Check if person already exists
   if (chats[name]) {
     alert('This person already exists!');
     return;
   }
 
-  // Add to chats object
   chats[name] = [];
 
-  // Add to contacts list
   const contactItem = document.createElement('div');
   contactItem.className = 'contact-item';
   contactItem.innerHTML = `
@@ -184,11 +214,9 @@ modalAddBtn.addEventListener('click', () => {
   currentChat = name;
   displayChat();
 
-  // Close modal
   addPersonModal.classList.remove('active');
 });
 
-// Close modal on Enter key
 modalInput.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') {
     modalAddBtn.click();
@@ -208,5 +236,5 @@ document.getElementById('close-btn').addEventListener('click', () => {
   window.electronAPI.close();
 });
 
-// Initialize with first contact
+// Initialize UI
 displayChat();
