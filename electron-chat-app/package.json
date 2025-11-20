@@ -1,0 +1,19 @@
+{
+  "name": "electron-chat-app",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "server": "node server.js",
+    "dev": "concurrently \"npm run server\" \"npm start\""
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "mongodb": "^7.0.0",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "electron": "^39.2.2"
+  }
+}
