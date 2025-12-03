@@ -3,17 +3,15 @@
   "version": "1.0.0",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
-    "server": "node server.js",
-    "dev": "concurrently \"npm run server\" \"npm start\""
+    "start": "electron ."
   },
   "dependencies": {
+    "express": "^4.18.2",
+    "pg": "^8.16.3",
     "cors": "^2.8.5",
-    "express": "^5.1.0",
-    "mongodb": "^7.0.0",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.5.4"
   },
   "devDependencies": {
-    "electron": "^39.2.2"
+    "electron": "^27.0.0"
   }
 }

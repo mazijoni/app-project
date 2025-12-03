@@ -1,5 +1,5 @@
 const express = require('express');
-const { MongoClient } = require('mongodb');
+const { Pool } = require('pg');
 const cors = require('cors');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -16,47 +16,65 @@ const io = socketIo(server, {
 app.use(cors());
 app.use(express.json());
 
-// MongoDB connection
-const MONGO_URI = 'mongodb://localhost:27017';
-const DB_NAME = 'chatapp';
-let db;
+// PostgreSQL connection
+const pool = new Pool({
+  user: 'postgres',
+  host: 'localhost',
+  database: 'chatapp',
+  password: 'nordpolen16',
+  port: 5432,
+});
 
-async function connectDB() {
+async function initDB() {
   try {
-    const client = new MongoClient(MONGO_URI);
-    await client.connect();
-    db = client.db(DB_NAME);
-    console.log('Connected to MongoDB');
+    // Create messages table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS messages (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(255) NOT NULL,
+        text TEXT NOT NULL,
+        timestamp TIMESTAMP NOT NULL
+      )
+    `);
+    
+    // Create users table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(255) UNIQUE NOT NULL,
+        createdat TIMESTAMP NOT NULL
+      )
+    `);
+    
+    console.log('Connected to PostgreSQL and tables initialized');
   } catch (err) {
-    console.error('MongoDB connection error:', err);
+    console.error('PostgreSQL connection error:', err);
   }
 }
 
-connectDB();
+initDB();
 
 // REST API endpoints
 app.get('/api/messages', async (req, res) => {
-  if (!db) return res.status(500).json({ error: "Database not connected" });
   try {
-    const messages = await db.collection('messages')
-      .find()
-      .sort({ timestamp: -1 })
-      .limit(50)
-      .toArray();
-    res.json(messages.reverse());
+    const result = await pool.query(
+      'SELECT * FROM messages ORDER BY timestamp DESC LIMIT 50'
+    );
+    res.json(result.rows.reverse());
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 app.post('/api/messages', async (req, res) => {
-  if (!db) return res.status(500).json({ error: "Database not connected" });
   try {
     const { username, text } = req.body;
-    const message = { username, text, timestamp: new Date() };
-    const result = await db.collection('messages').insertOne(message);
-    message._id = result.insertedId;
-
+    const timestamp = new Date();
+    const result = await pool.query(
+      'INSERT INTO messages (username, text, timestamp) VALUES ($1, $2, $3) RETURNING *',
+      [username, text, timestamp]
+    );
+    const message = result.rows[0];
     io.emit('new-message', message);
     res.json(message);
   } catch (err) {
@@ -65,21 +83,27 @@ app.post('/api/messages', async (req, res) => {
 });
 
 app.get('/api/users', async (req, res) => {
-  if (!db) return res.status(500).json({ error: "Database not connected" });
   try {
-    const users = await db.collection('users').find().toArray();
-    res.json(users);
+    const result = await pool.query('SELECT * FROM users');
+    res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 app.post('/api/users', async (req, res) => {
-  if (!db) return res.status(500).json({ error: "Database not connected" });
   try {
     const { username } = req.body;
-    const user = { username, createdAt: new Date() };
-    await db.collection('users').insertOne(user);
+    const createdat = new Date();
+    const result = await pool.query(
+      'INSERT INTO users (username, createdat) VALUES ($1, $2) ON CONFLICT (username) DO NOTHING RETURNING *',
+      [username, createdat]
+    );
+    let user = result.rows[0];
+    if (!user) {
+      const existing = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+      user = existing.rows[0];
+    }
     res.json(user);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -95,10 +119,13 @@ io.on('connection', (socket) => {
   });
 
   socket.on('send-message', async (data) => {
-    if (!db) return console.error("Database not connected");
     try {
-      const message = { username: data.username, text: data.text, timestamp: new Date() };
-      await db.collection('messages').insertOne(message);
+      const timestamp = new Date();
+      const result = await pool.query(
+        'INSERT INTO messages (username, text, timestamp) VALUES ($1, $2, $3) RETURNING *',
+        [data.username, data.text, timestamp]
+      );
+      const message = result.rows[0];
       io.emit('new-message', message);
     } catch (err) {
       console.error('Error saving message:', err);
